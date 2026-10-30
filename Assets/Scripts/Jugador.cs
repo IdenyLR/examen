@@ -3,28 +3,25 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
-public class JugadorV1 : MonoBehaviour
+public class Jugador : MonoBehaviour
 {
-    // Velocidad del jugador
     public float velocidad = 5f;
 
-    // Controles de este jugador
     public InputActionReference controles;
 
-    // Pico del otro jugador
     public string picoEnemigo;
 
     Rigidbody2D rb;
+    CircleCollider2D cuerpo;
 
     void Start()
     {
-        // Obtenemos el Rigidbody2D
         rb = GetComponent<Rigidbody2D>();
+        cuerpo = GetComponent<CircleCollider2D>();
     }
 
     void OnEnable()
     {
-        // Activamos los controles
         if (controles != null)
             controles.action.Enable();
     }
@@ -38,31 +35,40 @@ public class JugadorV1 : MonoBehaviour
 
     void FixedUpdate()
     {
-        // Leemos las teclas de este jugador
         Vector2 movimiento = controles.action.ReadValue<Vector2>();
 
-        // Evitamos que se mueva en diagonal
         if (Mathf.Abs(movimiento.x) >= Mathf.Abs(movimiento.y))
             movimiento.y = 0;
         else
             movimiento.x = 0;
 
-        // Movemos al jugador
         rb.linearVelocity = movimiento.normalized * velocidad;
+
+        if (movimiento != Vector2.zero)
+        {
+            float angulo = Mathf.Atan2(
+                movimiento.y,
+                movimiento.x
+            ) * Mathf.Rad2Deg;
+
+            rb.MoveRotation(angulo);
     }
 
-    void OnTriggerEnter2D(Collider2D otro)
+    Collider2D[] contactos = new Collider2D[10];
+    int cantidad = cuerpo.GetContacts(contactos);
+
+    for(int i = 0; i<cantidad; i++)
     {
-        // Si nos toca el pico contrario
-        if (otro.CompareTag(picoEnemigo))
+        if (contactos[i].CompareTag(picoEnemigo))
         {
             Reiniciar();
-        }
-    }
+            return;
+}
+}
+}
 
     void Reiniciar()
     {
-        // Reiniciamos toda la escena
         SceneManager.LoadScene(
             SceneManager.GetActiveScene().buildIndex
         );
